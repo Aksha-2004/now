@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "402196562208",
+    "project_id": "disaster-response-and-safety",
+    "storage_bucket": "disaster-response-and-safety.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402196562208:android:f3159a821985bf1b04d745",
+        "android_client_info": {
+          "package_name": "com.company.now"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6b9JTTpT57kXVkGQ8stoObjtu7luskYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402196562208:android:266e9e7ee7d2538304d745",
+        "android_client_info": {
+          "package_name": "com.company.won"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6b9JTTpT57kXVkGQ8stoObjtu7luskYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

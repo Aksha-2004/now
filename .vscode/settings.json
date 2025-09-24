@@ -1,0 +1,11 @@
+{
+  "dart.flutterSdkPath": "C:\\src\\flutter",
+  "java.help.showReleaseNotes": false,
+  "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.16.8-hotspot",
+  "terminal.integrated.env.windows": {
+    "PATH": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.16.8-hotspot\\bin;${env:PATH}"
+  },
+  "java.errors.incompleteClasspath.severity": "ignore",
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
+
