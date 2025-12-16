@@ -11,17 +11,30 @@ class OfflineAlertPage extends StatefulWidget {
 
 class _OfflineAlertPageState extends State<OfflineAlertPage> {
   final TextEditingController _messageController = TextEditingController();
+
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  // ✅ Load phone numbers from Firestore
+  @override
+  void initState() {
+    super.initState();
+    _loadPhoneNumbers();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  // 🔹 Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('users').get();
 
       final seen = <String>{};
-      final fetchedNumbers = snapshot.docs
+      final numbers = snapshot.docs
           .map((doc) => doc.data()['phone']?.toString().trim())
           .where((phone) =>
               phone != null && phone.isNotEmpty && seen.add(phone!))
@@ -29,7 +42,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
           .toList();
 
       setState(() {
-        phoneNumbers = fetchedNumbers;
+        phoneNumbers = numbers;
         isLoading = false;
       });
     } catch (e) {
@@ -40,7 +53,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     }
   }
 
-  // ✅ Open SMS app with ALL numbers + message filled
+  // ✅ Open NORMAL SMS app (user clicks Send manually)
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
 
@@ -58,24 +71,27 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       return;
     }
 
-    final numbers = phoneNumbers.join(',');
-    final uri = Uri.parse(
-      "sms:$numbers?body=${Uri.encodeComponent(message)}",
+    // 🔹 IMPORTANT: use semicolon for multiple recipients
+    final String recipients = phoneNumbers.join(';');
+
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: recipients,
+      queryParameters: {
+        'body': message,
+      },
     );
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(
+        smsUri,
+        mode: LaunchMode.externalApplication,
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Could not open SMS app")),
       );
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPhoneNumbers();
   }
 
   @override
@@ -111,7 +127,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "📋 Total Recipients: ${phoneNumbers.length}",
+                    "📋 Total Registered Numbers: ${phoneNumbers.length}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
@@ -132,3 +148,4 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     );
   }
 }
+
