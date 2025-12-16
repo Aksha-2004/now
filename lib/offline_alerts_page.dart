@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class OfflineAlertPage extends StatefulWidget {
   const OfflineAlertPage({super.key});
@@ -12,17 +12,19 @@ class OfflineAlertPage extends StatefulWidget {
 
 class _OfflineAlertPageState extends State<OfflineAlertPage> {
   final TextEditingController _messageController = TextEditingController();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  // Load phone numbers from Firestore
+  // 🔹 Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('users').get();
 
       final seen = <String>{};
-      final fetchedNumbers = snapshot.docs
+      final numbers = snapshot.docs
           .map((doc) => doc.data()['phone']?.toString().trim())
           .where((phone) =>
               phone != null && phone.isNotEmpty && seen.add(phone!))
@@ -30,18 +32,18 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
           .toList();
 
       setState(() {
-        phoneNumbers = fetchedNumbers;
+        phoneNumbers = numbers;
         isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
+      isLoading = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("❌ Error loading numbers: $e")),
       );
     }
   }
 
-  // ✅ Open normal SMS app with ALL numbers filled
+  // 🔔 PLAY ALARM + OPEN SMS
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
 
@@ -59,30 +61,41 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       return;
     }
 
-    // IMPORTANT FIX 👇
-    // Android uses ; , iOS uses ,
-    final separator = Platform.isAndroid ? ';' : ',';
-    final numbers = phoneNumbers.join(separator);
+    // 🔔 Play looping emergency sound
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(
+      AssetSource('sounds/emergency_alarm.mp3'),
+      volume: 1.0,
+    );
 
-    final uri = Uri(
-      scheme: 'sms',
-      path: numbers,
-      queryParameters: {'body': message},
+    // ⏳ Let alarm play for 2 seconds
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 📩 Open SMS app with ALL numbers
+    final numbers = phoneNumbers.join(',');
+    final uri = Uri.parse(
+      "sms:$numbers?body=${Uri.encodeComponent(message)}",
     );
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Could not open SMS app")),
-      );
     }
+
+    // 🔇 Stop sound after redirect
+    await _audioPlayer.stop();
   }
 
   @override
   void initState() {
     super.initState();
     _loadPhoneNumbers();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -113,12 +126,12 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     icon: const Icon(Icons.sms),
                     label: const Text("Send SMS to All"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Colors.orange,e
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "📋 Total Recipients: ${phoneNumbers.length}",
+                    "📋 Total Recipients: ${phoneNumbers.lngth}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
@@ -139,3 +152,4 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     );
   }
 }
+
