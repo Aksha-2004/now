@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_sms/flutter_sms.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OfflineAlertPage extends StatefulWidget {
   const OfflineAlertPage({super.key});
@@ -14,33 +14,36 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  // Load phone numbers from Firestore
+  // ✅ Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
-      final snapshot = await FirebaseFirestore.instance.collection('users').get();
-      final seen = <String>{};
+      final snapshot =
+          await FirebaseFirestore.instance.collection('users').get();
 
+      final seen = <String>{};
       final fetchedNumbers = snapshot.docs
           .map((doc) => doc.data()['phone']?.toString().trim())
-          .where((phone) => phone != null && phone.isNotEmpty && seen.add(phone!))
+          .where((phone) =>
+              phone != null && phone.isNotEmpty && seen.add(phone!))
+          .cast<String>()
           .toList();
 
       setState(() {
-        phoneNumbers = fetchedNumbers.cast<String>();
+        phoneNumbers = fetchedNumbers;
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("⚠️ Error loading phone numbers: $e")),
+        SnackBar(content: Text("❌ Error loading numbers: $e")),
       );
     }
   }
 
-  // Send SMS to list of phone numbers
-  Future<void> _sendSMS(String message, List<String> recipients) async {
+  // ✅ Open SMS app with ALL numbers + message filled
+  Future<void> _openSMSApp() async {
+    final message = _messageController.text.trim();
+
     if (message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("⚠️ Message cannot be empty")),
@@ -48,15 +51,23 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       return;
     }
 
-    try {
-      await sendSMS(message: message, recipients: recipients, sendDirect: false);
+    if (phoneNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Alert sent via SMS"), backgroundColor: Colors.green),
+        const SnackBar(content: Text("⚠️ No phone numbers found")),
       );
-      _messageController.clear();
-    } catch (e) {
+      return;
+    }
+
+    final numbers = phoneNumbers.join(',');
+    final uri = Uri.parse(
+      "sms:$numbers?body=${Uri.encodeComponent(message)}",
+    );
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed to send SMS: $e"), backgroundColor: Colors.red),
+        const SnackBar(content: Text("❌ Could not open SMS app")),
       );
     }
   }
@@ -86,21 +97,23 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     decoration: const InputDecoration(
                       labelText: "Alert Message",
                       border: OutlineInputBorder(),
-                      hintText: "Type the disaster alert here...",
+                      hintText: "Type disaster alert here...",
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: phoneNumbers.isNotEmpty
-                        ? () => _sendSMS(_messageController.text.trim(), phoneNumbers)
-                        : null,
+                    onPressed: _openSMSApp,
                     icon: const Icon(Icons.sms),
                     label: const Text("Send SMS to All"),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  Text("📋 Total Recipients: ${phoneNumbers.length}",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Text(
+                    "📋 Total Recipients: ${phoneNumbers.length}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 6),
                   Expanded(
                     child: ListView.builder(
@@ -119,3 +132,4 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     );
   }
 }
+
