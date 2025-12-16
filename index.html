@@ -2,50 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Disaster Response App - Stay safe during emergencies.">
+  <meta name="description" content="Disaster Response App">
 
-  <!-- Base href for GitHub Pages -->
   <base href="/now/">
-
-  <!-- iOS PWA support -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Disaster">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Android / Mobile -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
-
-  <!-- Favicon -->
-  <link rel="shortcut icon" type="image/png" href="emergency-icon-.webp">
-
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
 
   <title>Disaster</title>
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ff9800">
 
-  <!-- Flutter bootstrap -->
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Disaster">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Icons -->
+  <link rel="icon" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="icon" sizes="512x512" href="icons/Icon-512.png">
+
   <script src="flutter_bootstrap.js" defer></script>
 
   <style>
     #installBtn {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      padding: 12px 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 20px;
       font-size: 16px;
       background-color: #ff9800;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      display: none;
       z-index: 9999;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
@@ -54,41 +45,39 @@
 
 <body>
 
-  <!-- Install Button -->
-  <button id="installBtn">Install App</button>
+<button id="installBtn">Install App</button>
 
-  <script>
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
+<script>
+  let deferredPrompt;
+  const installBtn = document.getElementById('installBtn');
 
-    // Fired when app becomes installable
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'block';
-    });
+  // ALWAYS show button on mobile
+  installBtn.style.display = 'block';
 
-    // Button click → show install popup
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
 
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
       deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-
-      if (choice.outcome === 'accepted') {
-        console.log('App installed');
-      }
-
+      const result = await deferredPrompt.userChoice;
       deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
+    } else {
+      alert(
+        "To install this app:\n\n" +
+        "1. Tap the three dots (⋮) in your browser\n" +
+        "2. Select 'Add to Home Screen' or 'Install app'"
+      );
+    }
+  });
 
-    // Hide button if already installed
-    window.addEventListener('appinstalled', () => {
-      installBtn.style.display = 'none';
-      console.log('PWA was installed');
-    });
-  </script>
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+  });
+</script>
 
 </body>
 </html>
+
