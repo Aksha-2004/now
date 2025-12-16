@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,7 +15,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  // ✅ Load phone numbers from Firestore
+  // Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
@@ -40,7 +41,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     }
   }
 
-  // ✅ Open SMS app with ALL numbers + message filled
+  // ✅ Open normal SMS app with ALL numbers filled
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
 
@@ -58,9 +59,15 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       return;
     }
 
-    final numbers = phoneNumbers.join(',');
-    final uri = Uri.parse(
-      "sms:$numbers?body=${Uri.encodeComponent(message)}",
+    // IMPORTANT FIX 👇
+    // Android uses ; , iOS uses ,
+    final separator = Platform.isAndroid ? ';' : ',';
+    final numbers = phoneNumbers.join(separator);
+
+    final uri = Uri(
+      scheme: 'sms',
+      path: numbers,
+      queryParameters: {'body': message},
     );
 
     if (await canLaunchUrl(uri)) {
@@ -132,4 +139,3 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     );
   }
 }
-
