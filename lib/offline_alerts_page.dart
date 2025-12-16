@@ -13,6 +13,7 @@ class OfflineAlertPage extends StatefulWidget {
 class _OfflineAlertPageState extends State<OfflineAlertPage> {
   final TextEditingController _messageController = TextEditingController();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
@@ -29,7 +30,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     super.dispose();
   }
 
-  // 🔹 Load numbers from Firestore
+  // 🔹 Load phone numbers
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
@@ -50,44 +51,52 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     } catch (e) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error loading numbers: $e")),
+        SnackBar(content: Text("❌ Error: $e")),
       );
     }
   }
 
-  // 🔔 Play sound and open SMS
+  // 🔔 Alarm + Open SMS
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
-    if (message.isEmpty) {
+
+    if (message.isEmpty || phoneNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Message cannot be empty")),
-      );
-      return;
-    }
-    if (phoneNumbers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ No phone numbers found")),
+        const SnackBar(content: Text("⚠️ Message or numbers missing")),
       );
       return;
     }
 
-    // 🔔 Play emergency sound
+    // 🔔 Play alarm
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(AssetSource('sounds/emergency_alarm.mp3'));
+    await _audioPlayer.play(
+      AssetSource('sounds/emergency_alarm.mp3'),
+      volume: 1.0,
+    );
 
-    // 📩 Prepare SMS
-    final numbers = phoneNumbers.join(',');
-    final uri = Uri.parse("sms:$numbers?body=${Uri.encodeComponent(message)}");
+    // ⏳ Let sound play shortly
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    // 🔇 Stop sound BEFORE opening SMS
+    // 📩 Create proper SMS URI
+    final String numbers = phoneNumbers.join(',');
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: numbers,
+      queryParameters: {'body': message},
+    );
+
+    // 🔇 Stop sound
     await _audioPlayer.stop();
 
-    // ⚡ Open native SMS app
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // 📱 Open native SMS app
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(
+        smsUri,
+        mode: LaunchMode.externalApplication,
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Could not open SMS app")),
+        const SnackBar(content: Text("❌ Cannot open SMS app")),
       );
     }
   }
@@ -111,7 +120,6 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     decoration: const InputDecoration(
                       labelText: "Alert Message",
                       border: OutlineInputBorder(),
-                      hintText: "Type disaster alert here...",
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -128,23 +136,9 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     "📋 Total Recipients: ${phoneNumbers.length}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 6),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: phoneNumbers.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: Text(phoneNumbers[index]),
-                        );
-                      },
-                    ),
-                  ),
                 ],
               ),
             ),
     );
   }
 }
-
-
