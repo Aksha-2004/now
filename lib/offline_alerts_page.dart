@@ -14,26 +14,14 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPhoneNumbers();
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  // 🔹 Load registered phone numbers
+  // ✅ Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('users').get();
 
       final seen = <String>{};
-      final numbers = snapshot.docs
+      final fetchedNumbers = snapshot.docs
           .map((doc) => doc.data()['phone']?.toString().trim())
           .where((phone) =>
               phone != null && phone.isNotEmpty && seen.add(phone!))
@@ -41,7 +29,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
           .toList();
 
       setState(() {
-        phoneNumbers = numbers;
+        phoneNumbers = fetchedNumbers;
         isLoading = false;
       });
     } catch (e) {
@@ -52,38 +40,42 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     }
   }
 
-  // 📩 Open NORMAL SMS app with ALL numbers
+  // ✅ Open SMS app with ALL numbers + message filled
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
 
-    if (message.isEmpty || phoneNumbers.isEmpty) {
+    if (message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Message or numbers missing")),
+        const SnackBar(content: Text("⚠️ Message cannot be empty")),
       );
       return;
     }
 
-    // ✅ All numbers separated by comma
-    final String recipients = phoneNumbers.join(',');
+    if (phoneNumbers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ No phone numbers found")),
+      );
+      return;
+    }
 
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: recipients,
-      queryParameters: {
-        'body': message,
-      },
+    final numbers = phoneNumbers.join(',');
+    final uri = Uri.parse(
+      "sms:$numbers?body=${Uri.encodeComponent(message)}",
     );
 
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(
-        smsUri,
-        mode: LaunchMode.externalApplication,
-      );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Could not open SMS app")),
       );
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhoneNumbers();
   }
 
   @override
@@ -119,8 +111,20 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "📋 Total Registered Numbers: ${phoneNumbers.length}",
+                    "📋 Total Recipients: ${phoneNumbers.length}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: phoneNumbers.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: const Icon(Icons.phone),
+                          title: Text(phoneNumbers[index]),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
