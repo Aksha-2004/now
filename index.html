@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Disaster Response App - Stay safe during emergencies.">
 
-  <!-- Base href for Flutter web (replace / if needed) -->
+  <!-- Base href for GitHub Pages -->
   <base href="/now/">
 
   <!-- iOS PWA support -->
@@ -23,38 +23,72 @@
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/png" href="emergency-icon-.webp">
 
-  <!-- Manifest for PWA -->
+  <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
 
   <title>Disaster</title>
 
-  <!-- Optional: theme color for status bar -->
-  <meta name="theme-color" content="#1976d2">
+  <meta name="theme-color" content="#ff9800">
 
-  <!-- Flutter bootstrap script -->
+  <!-- Flutter bootstrap -->
   <script src="flutter_bootstrap.js" defer></script>
+
+  <style>
+    #installBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      font-size: 16px;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      z-index: 9999;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+  </style>
 </head>
+
 <body>
+
+  <!-- Install Button -->
+  <button id="installBtn">Install App</button>
+
   <script>
-    // Optional: prompt user to install PWA
     let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    // Fired when app becomes installable
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Show install prompt UI here if you want
-      console.log('PWA install prompt available');
+      installBtn.style.display = 'block';
     });
 
-    function promptInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          console.log(choiceResult.outcome);
-          deferredPrompt = null;
-        });
+    // Button click → show install popup
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+
+      if (choice.outcome === 'accepted') {
+        console.log('App installed');
       }
-    }
+
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    // Hide button if already installed
+    window.addEventListener('appinstalled', () => {
+      installBtn.style.display = 'none';
+      console.log('PWA was installed');
+    });
   </script>
+
 </body>
 </html>
-
