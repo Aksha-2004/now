@@ -1,7 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class OfflineAlertPage extends StatefulWidget {
   const OfflineAlertPage({super.key});
@@ -12,32 +12,17 @@ class OfflineAlertPage extends StatefulWidget {
 
 class _OfflineAlertPageState extends State<OfflineAlertPage> {
   final TextEditingController _messageController = TextEditingController();
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
   List<String> phoneNumbers = [];
   bool isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPhoneNumbers();
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  // 🔹 Load phone numbers
+  // Load phone numbers from Firestore
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('users').get();
 
       final seen = <String>{};
-      final numbers = snapshot.docs
+      final fetchedNumbers = snapshot.docs
           .map((doc) => doc.data()['phone']?.toString().trim())
           .where((phone) =>
               phone != null && phone.isNotEmpty && seen.add(phone!))
@@ -45,60 +30,59 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
           .toList();
 
       setState(() {
-        phoneNumbers = numbers;
+        phoneNumbers = fetchedNumbers;
         isLoading = false;
       });
     } catch (e) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error: $e")),
+        SnackBar(content: Text("❌ Error loading numbers: $e")),
       );
     }
   }
 
-  // 🔔 Alarm + Open SMS
+  // ✅ Open normal SMS app with ALL numbers filled
   Future<void> _openSMSApp() async {
     final message = _messageController.text.trim();
 
-    if (message.isEmpty || phoneNumbers.isEmpty) {
+    if (message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Message or numbers missing")),
+        const SnackBar(content: Text("⚠️ Message cannot be empty")),
       );
       return;
     }
 
-    // 🔔 Play alarm
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(
-      AssetSource('sounds/emergency_alarm.mp3'),
-      volume: 1.0,
-    );
+    if (phoneNumbers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ No phone numbers found")),
+      );
+      return;
+    }
 
-    // ⏳ Let sound play shortly
-    await Future.delayed(const Duration(milliseconds: 500));
+    // IMPORTANT FIX 👇
+    // Android uses ; , iOS uses ,
+    final separator = Platform.isAndroid ? ';' : ',';
+    final numbers = phoneNumbers.join(separator);
 
-    // 📩 Create proper SMS URI
-    final String numbers = phoneNumbers.join(',');
-    final Uri smsUri = Uri(
+    final uri = Uri(
       scheme: 'sms',
       path: numbers,
       queryParameters: {'body': message},
     );
 
-    // 🔇 Stop sound
-    await _audioPlayer.stop();
-
-    // 📱 Open native SMS app
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(
-        smsUri,
-        mode: LaunchMode.externalApplication,
-      );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Cannot open SMS app")),
+        const SnackBar(content: Text("❌ Could not open SMS app")),
       );
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhoneNumbers();
   }
 
   @override
@@ -120,6 +104,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     decoration: const InputDecoration(
                       labelText: "Alert Message",
                       border: OutlineInputBorder(),
+                      hintText: "Type disaster alert here...",
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -136,9 +121,22 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
                     "📋 Total Recipients: ${phoneNumbers.length}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: phoneNumbers.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: const Icon(Icons.phone),
+                          title: Text(phoneNumbers[index]),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
     );
   }
 }
+
