@@ -1,11 +1,12 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Disaster Response App">
 
-  <base href="/now/">
+  <!-- IMPORTANT for GitHub Pages -->
+  <base href="$FLUTTER_BASE_HREF">
 
   <title>Disaster</title>
 
@@ -22,6 +23,7 @@
   <link rel="icon" sizes="192x192" href="icons/Icon-192.png">
   <link rel="icon" sizes="512x512" href="icons/Icon-512.png">
 
+  <!-- Flutter -->
   <script src="flutter_bootstrap.js" defer></script>
 
   <style>
@@ -39,6 +41,7 @@
       cursor: pointer;
       z-index: 9999;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      display: none;
     }
   </style>
 </head>
@@ -51,12 +54,11 @@
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  // ALWAYS show button on mobile
-  installBtn.style.display = 'block';
-
+  // Show button only when install is available
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    installBtn.style.display = 'block';
   });
 
   installBtn.addEventListener('click', async () => {
@@ -67,8 +69,8 @@
     } else {
       alert(
         "To install this app:\n\n" +
-        "1. Tap the three dots (⋮) in your browser\n" +
-        "2. Select 'Add to Home Screen' or 'Install app'"
+        "1. Tap the three dots (⋮)\n" +
+        "2. Select 'Add to Home Screen'"
       );
     }
   });
@@ -80,4 +82,3 @@
 
 </body>
 </html>
-
