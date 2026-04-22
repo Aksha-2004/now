@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -41,7 +41,7 @@
       cursor: pointer;
       z-index: 9999;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      display: none;
+      display: block; /* ✅ Always visible */
     }
   </style>
 </head>
@@ -54,27 +54,29 @@
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  // Show button only when install is available
+  // Try to capture install event
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.style.display = 'block';
   });
 
   installBtn.addEventListener('click', async () => {
     if (deferredPrompt) {
+      // Show install popup
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
       deferredPrompt = null;
     } else {
+      // Fallback manual instructions
       alert(
         "To install this app:\n\n" +
         "1. Tap the three dots (⋮)\n" +
-        "2. Select 'Add to Home Screen'"
+        "2. Select 'Add to Home Screen' or 'Install App'"
       );
     }
   });
 
+  // Hide button after install
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
   });
