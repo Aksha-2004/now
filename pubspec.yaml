@@ -1,33 +1,50 @@
 name: now
 description: "A new Flutter project."
-publish_to: 'none' # Prevent publishing to pub.dev
+publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+
+  # ✅ ADD THIS (VERY IMPORTANT)
+  flutter_localizations:
+    sdk: flutter
+
   cupertino_icons: ^1.0.8
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.17.5
-  cloud_firestore: ^4.17.5
-  firebase_messaging: ^14.7.16         # ✅ Firebase Messaging added
-  url_launcher: ^6.2.5
-  geolocator: ^10.1.0
-  geocoding: ^2.1.0
-  intl: ^0.18.1
+  pdf: ^3.10.6
+  path_provider: ^2.1.2
+  open_file: ^3.3.2
+
+  # ✅ Firebase packages
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  cloud_functions: ^5.1.4
+  firebase_messaging: ^15.1.2
+
+  # ✅ Other dependencies
+  url_launcher: ^6.3.1
+  geolocator: ^10.1.1
+  geocoding: ^3.0.0
+  intl: ^0.20.0
   nearby_connections: ^3.0.2
-  flutter_sms: ^2.3.1
-  permission_handler: ^11.3.0
+  flutter_sms: ^2.3.3
+  permission_handler: ^11.3.1
+  audioplayers: ^5.2.1
 
 dev_dependencies:
-  flutter_lints: 4.0.0
   flutter_test:
     sdk: flutter
+  flutter_lints: ^4.0.0
   mockito: ^5.4.4
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/sounds/emergency_alarm.mp3
