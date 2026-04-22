@@ -13,9 +13,7 @@ class VolunteerDetailsPage extends StatefulWidget {
 
 class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
   final usernameController = TextEditingController();
-  final phoneController = TextEditingController();
   final addressController = TextEditingController();
-  final otpController = TextEditingController();
 
   String selectedSkill = 'General';
   bool willHelp = false;
@@ -23,103 +21,43 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
   final List<String> skills = ['Medical', 'Rescue', 'Logistics', 'General'];
 
   bool isSubmitting = false;
-  bool otpSent = false;
-  bool isLoadingOtp = false;
-
-  String verificationId = "";
+  bool isSendingMail = false;
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  // ================= SEND OTP =================
-  Future<void> _sendOTP() async {
-    String phone = phoneController.text.trim();
+  // ================= SEND EMAIL VERIFICATION =================
+  Future<void> _sendEmailVerification() async {
+    final user = _auth.currentUser;
 
-    // Remove +91 if user typed it
-    if (phone.startsWith("+91")) {
-      phone = phone.substring(3);
-    }
-
-    // Validate Indian number
-    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter valid Indian mobile number")),
-      );
+    if (user == null) {
+      _showMsg("User not logged in");
       return;
     }
 
-    String fullPhone = "+91$phone";
-
-    setState(() {
-      isLoadingOtp = true;
-      otpSent = true; // show OTP field immediately
-    });
-
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: fullPhone,
+      setState(() => isSendingMail = true);
 
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
+      await user.sendEmailVerification();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Auto Verified")),
-          );
-        },
+      _showMsg("Verification email sent. Check your inbox.");
 
-        verificationFailed: (FirebaseAuthException e) {
-          setState(() => isLoadingOtp = false);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("OTP Failed: ${e.message}")),
-          );
-        },
-
-        codeSent: (String verId, int? resendToken) {
-          setState(() {
-            verificationId = verId;
-            isLoadingOtp = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("OTP Sent Successfully")),
-          );
-        },
-
-        codeAutoRetrievalTimeout: (String verId) {
-          verificationId = verId;
-        },
-      );
+      setState(() => isSendingMail = false);
     } catch (e) {
-      setState(() => isLoadingOtp = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      setState(() => isSendingMail = false);
+      _showMsg("Error: $e");
     }
   }
 
-  // ================= VERIFY OTP =================
-  Future<bool> _verifyOTP() async {
-    if (otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter OTP")),
-      );
-      return false;
-    }
+  // ================= CHECK VERIFIED =================
+  Future<bool> _checkEmailVerified() async {
+    await _auth.currentUser!.reload();
+    final user = _auth.currentUser;
 
-    try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: otpController.text.trim(),
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
+    if (user!.emailVerified) {
       return true;
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid OTP")),
-      );
+    } else {
+      _showMsg("Please verify your email first");
       return false;
     }
   }
@@ -131,7 +69,8 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    bool verified = await _verifyOTP();
+    // 🔴 Check email verified
+    bool verified = await _checkEmailVerified();
     if (!verified) return;
 
     final docRef = _firestore.collection('volunteers').doc(user.uid);
@@ -153,7 +92,6 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         'uid': user.uid,
         'email': user.email,
         'username': usernameController.text.trim(),
-        'phone': "+91${phoneController.text.trim()}",
         'address': addressController.text.trim(),
         'skill': selectedSkill,
         'willing': willHelp,
@@ -173,6 +111,11 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
     }
 
     setState(() => isSubmitting = false);
+  }
+
+  void _showMsg(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // ================= UI =================
@@ -201,40 +144,24 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
-            // Phone
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText:
-                    AppTranslations.getText('mobile_number', lang),
-                prefixText: "+91 ",
-              ),
+            // Email Display
+            Text(
+              "Email: ${_auth.currentUser?.email ?? ""}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 10),
 
-            // Send OTP
+            // 🔴 SEND VERIFICATION EMAIL
             ElevatedButton(
-              onPressed: isLoadingOtp ? null : _sendOTP,
+              onPressed: isSendingMail ? null : _sendEmailVerification,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
               ),
-              child: isLoadingOtp
+              child: isSendingMail
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Send OTP"),
+                  : const Text("Verify Email"),
             ),
-
-            const SizedBox(height: 10),
-
-            // OTP Field
-            if (otpSent)
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: "Enter OTP"),
-              ),
 
             const SizedBox(height: 10),
 
