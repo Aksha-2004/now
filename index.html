@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Disaster Response App">
 
-  <!-- ✅ IMPORTANT for GitHub Pages -->
+  <!-- ✅ GitHub Pages -->
   <base href="/now/">
 
   <title>Disaster</title>
@@ -22,6 +22,10 @@
   <!-- Icons -->
   <link rel="icon" sizes="192x192" href="icons/Icon-192.png">
   <link rel="icon" sizes="512x512" href="icons/Icon-512.png">
+
+  <!-- Firebase (IMPORTANT for OTP) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <!-- Flutter -->
   <script src="flutter_bootstrap.js" defer></script>
@@ -44,29 +48,25 @@
       display: block;
     }
 
-    /* 🔴 Invisible reCAPTCHA container */
+    /* 👇 Make CAPTCHA invisible */
     #recaptcha-container {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      z-index: 9999;
+      display: none;
     }
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 REQUIRED FOR FIREBASE OTP -->
+<!-- ✅ REQUIRED (DO NOT DELETE) -->
 <div id="recaptcha-container"></div>
 
-<!-- ✅ Install Button -->
 <button id="installBtn">Install App</button>
 
 <script>
+  // ================= INSTALL BUTTON =================
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  // Capture install event
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -81,12 +81,11 @@
       alert(
         "To install this app:\n\n" +
         "1. Tap the three dots (⋮)\n" +
-        "2. Select 'Add to Home Screen' or 'Install App'"
+        "2. Select 'Add to Home Screen'"
       );
     }
   });
 
-  // Hide button after install
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
   });
