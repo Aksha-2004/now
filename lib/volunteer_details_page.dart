@@ -35,54 +35,68 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
   Future<void> _sendOTP() async {
     String phone = phoneController.text.trim();
 
-    if (phone.length != 10) {
+    // Remove +91 if user typed it
+    if (phone.startsWith("+91")) {
+      phone = phone.substring(3);
+    }
+
+    // Validate Indian number
+    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter valid 10-digit number")),
+        const SnackBar(content: Text("Enter valid Indian mobile number")),
       );
       return;
     }
 
+    String fullPhone = "+91$phone";
+
     setState(() {
       isLoadingOtp = true;
-      otpSent = true; // ✅ SHOW OTP FIELD IMMEDIATELY
+      otpSent = true; // show OTP field immediately
     });
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: "+91$phone",
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: fullPhone,
 
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Auto Verified")),
-        );
-      },
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Auto Verified")),
+          );
+        },
 
-      verificationFailed: (FirebaseAuthException e) {
-        setState(() {
-          isLoadingOtp = false;
-        });
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => isLoadingOtp = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("OTP Failed: ${e.message}")),
-        );
-      },
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("OTP Failed: ${e.message}")),
+          );
+        },
 
-      codeSent: (String verId, int? resendToken) {
-        setState(() {
+        codeSent: (String verId, int? resendToken) {
+          setState(() {
+            verificationId = verId;
+            isLoadingOtp = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("OTP Sent Successfully")),
+          );
+        },
+
+        codeAutoRetrievalTimeout: (String verId) {
           verificationId = verId;
-          isLoadingOtp = false;
-        });
+        },
+      );
+    } catch (e) {
+      setState(() => isLoadingOtp = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("OTP Sent")),
-        );
-      },
-
-      codeAutoRetrievalTimeout: (String verId) {
-        verificationId = verId;
-      },
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
 
   // ================= VERIFY OTP =================
@@ -131,6 +145,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         SnackBar(
           content: Text(
               AppTranslations.getText('already_submitted', lang)),
+          backgroundColor: Colors.orange,
         ),
       );
     } else {
@@ -138,11 +153,11 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         'uid': user.uid,
         'email': user.email,
         'username': usernameController.text.trim(),
-        'phone': phoneController.text.trim(),
+        'phone': "+91${phoneController.text.trim()}",
         'address': addressController.text.trim(),
         'skill': selectedSkill,
         'willing': willHelp,
-        'verified': true,
+        'verified': true, // ✅ VERIFIED USER
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -150,6 +165,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         SnackBar(
           content: Text(
               AppTranslations.getText('volunteer_submitted', lang)),
+          backgroundColor: Colors.green,
         ),
       );
 
@@ -174,6 +190,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Username
             TextField(
               controller: usernameController,
               decoration: InputDecoration(
@@ -181,21 +198,28 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
                     AppTranslations.getText('username', lang),
               ),
             ),
+
             const SizedBox(height: 10),
 
+            // Phone
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText:
                     AppTranslations.getText('mobile_number', lang),
+                prefixText: "+91 ",
               ),
             ),
 
             const SizedBox(height: 10),
 
+            // Send OTP
             ElevatedButton(
               onPressed: isLoadingOtp ? null : _sendOTP,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+              ),
               child: isLoadingOtp
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text("Send OTP"),
@@ -203,7 +227,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
-            // ✅ ALWAYS SHOW OTP FIELD AFTER CLICK
+            // OTP Field
             if (otpSent)
               TextField(
                 controller: otpController,
@@ -214,6 +238,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
+            // Address
             TextField(
               controller: addressController,
               decoration: InputDecoration(
@@ -224,6 +249,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
+            // Skill
             DropdownButtonFormField(
               value: selectedSkill,
               decoration: InputDecoration(
@@ -242,6 +268,7 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
+            // Willing
             SwitchListTile(
               title: Text(
                 AppTranslations.getText('willing_help', lang),
@@ -252,9 +279,16 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 20),
 
-            ElevatedButton(
+            // Submit
+            ElevatedButton.icon(
               onPressed: isSubmitting ? null : _submitDetails,
-              child: const Text("Submit"),
+              icon: const Icon(Icons.check),
+              label: const Text("Submit"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 30, vertical: 14),
+              ),
             ),
           ],
         ),
