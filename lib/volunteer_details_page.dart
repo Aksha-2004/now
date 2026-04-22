@@ -7,7 +7,8 @@ class VolunteerDetailsPage extends StatefulWidget {
   const VolunteerDetailsPage({super.key});
 
   @override
-  State<VolunteerDetailsPage> createState() => _VolunteerDetailsPageState();
+  State<VolunteerDetailsPage> createState() =>
+      _VolunteerDetailsPageState();
 }
 
 class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
@@ -23,8 +24,9 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
   bool isSubmitting = false;
   bool otpSent = false;
+  bool isLoadingOtp = false;
 
-  ConfirmationResult? confirmationResult;
+  String verificationId = "";
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
@@ -33,35 +35,72 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
   Future<void> _sendOTP() async {
     String phone = phoneController.text.trim();
 
-    if (phone.isEmpty || phone.length != 10) {
+    if (phone.length != 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter valid 10-digit mobile number")),
+        const SnackBar(content: Text("Enter valid 10-digit number")),
       );
       return;
     }
 
-    try {
-      confirmationResult =
-          await FirebaseAuth.instance.signInWithPhoneNumber("+91$phone");
+    setState(() {
+      isLoadingOtp = true;
+      otpSent = true; // ✅ SHOW OTP FIELD IMMEDIATELY
+    });
 
-      setState(() {
-        otpSent = true;
-      });
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: "+91$phone",
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP Sent Successfully")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("OTP Error: $e")),
-      );
-    }
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Auto Verified")),
+        );
+      },
+
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          isLoadingOtp = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("OTP Failed: ${e.message}")),
+        );
+      },
+
+      codeSent: (String verId, int? resendToken) {
+        setState(() {
+          verificationId = verId;
+          isLoadingOtp = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("OTP Sent")),
+        );
+      },
+
+      codeAutoRetrievalTimeout: (String verId) {
+        verificationId = verId;
+      },
+    );
   }
 
   // ================= VERIFY OTP =================
   Future<bool> _verifyOTP() async {
+    if (otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Enter OTP")),
+      );
+      return false;
+    }
+
     try {
-      await confirmationResult!.confirm(otpController.text.trim());
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otpController.text.trim(),
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
       return true;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,13 +117,6 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    if (!otpSent) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please verify phone number first")),
-      );
-      return;
-    }
-
     bool verified = await _verifyOTP();
     if (!verified) return;
 
@@ -97,9 +129,8 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
     if (docSnapshot.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(AppTranslations.getText('already_submitted', lang)),
-          backgroundColor: Colors.orange,
+          content: Text(
+              AppTranslations.getText('already_submitted', lang)),
         ),
       );
     } else {
@@ -111,15 +142,14 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
         'address': addressController.text.trim(),
         'skill': selectedSkill,
         'willing': willHelp,
-        'verified': true, // ✅ IMPORTANT SECURITY
+        'verified': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(AppTranslations.getText('volunteer_submitted', lang)),
-          backgroundColor: Colors.green,
+          content: Text(
+              AppTranslations.getText('volunteer_submitted', lang)),
         ),
       );
 
@@ -164,24 +194,23 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
 
             const SizedBox(height: 10),
 
-            // 🔴 SEND OTP
             ElevatedButton(
-              onPressed: _sendOTP,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-              ),
-              child: const Text("Send OTP"),
+              onPressed: isLoadingOtp ? null : _sendOTP,
+              child: isLoadingOtp
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Send OTP"),
             ),
 
-            if (otpSent) ...[
-              const SizedBox(height: 10),
+            const SizedBox(height: 10),
+
+            // ✅ ALWAYS SHOW OTP FIELD AFTER CLICK
+            if (otpSent)
               TextField(
                 controller: otpController,
                 keyboardType: TextInputType.number,
                 decoration:
                     const InputDecoration(labelText: "Enter OTP"),
               ),
-            ],
 
             const SizedBox(height: 10),
 
@@ -218,22 +247,14 @@ class _VolunteerDetailsPageState extends State<VolunteerDetailsPage> {
                 AppTranslations.getText('willing_help', lang),
               ),
               value: willHelp,
-              activeColor: Colors.red,
               onChanged: (val) => setState(() => willHelp = val),
             ),
 
             const SizedBox(height: 20),
 
-            ElevatedButton.icon(
+            ElevatedButton(
               onPressed: isSubmitting ? null : _submitDetails,
-              icon: const Icon(Icons.check),
-              label: Text(
-                  AppTranslations.getText('submit', lang)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 30, vertical: 14),
-              ),
+              child: const Text("Submit"),
             ),
           ],
         ),
