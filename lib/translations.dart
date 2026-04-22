@@ -4,7 +4,7 @@ class AppTranslations {
     // ================= ENGLISH =================
     'en': {
 
-      // 🔹 Home Page
+      // 🔹 Home
       'app_title': 'Emergency App',
       'welcome': '👋 Welcome!',
       'subtitle': 'Access services and stay safe.',
@@ -16,7 +16,7 @@ class AppTranslations {
       'contacts': 'Emergency Contacts',
       'first_aid': 'First Aid Tips',
 
-      // 🔹 Login Page
+      // 🔹 Login
       'login_title': 'Login to Continue',
       'username': 'Username',
       'email': 'Email',
@@ -25,230 +25,234 @@ class AppTranslations {
       'login': 'Login',
       'new_user': 'New user? Create an account',
 
-      // 🔹 Signup Page
+      // 🔹 Signup
       'signup_title': 'Create an Account',
       'signup': 'Sign Up',
       'already_account': 'Already have an account? Login',
       'signup_failed': 'Signup failed:',
 
-      // 🔹 Volunteers Page
+      // 🔹 Volunteer Page
       'search_hint': 'Search by name or address',
       'error_loading': 'Error loading volunteers.',
       'no_volunteers': 'No volunteers found.',
-      'no_match': 'No matching volunteers found.',
+      'no_match': 'No matching volunteers found',
       'skill': 'Skill',
       'willing': 'Willing',
       'yes': 'Yes',
       'no': 'No',
 
-      // 🔹 Basic Needs Page
+      // 🔹 Volunteer Details
+      'volunteer_details': 'Volunteer Details',
+      'mobile_number': 'Mobile Number',
+      'address': 'Address',
+      'skill_type': 'Skill Type',
+      'willing_help': 'Willing to help during disasters?',
+      'already_submitted': 'You have already submitted your details',
+      'volunteer_submitted': 'Volunteer registered successfully',
+
+      // 🔹 User Details Page
+      'user_details': 'User Details',
+      'complete_profile': 'Complete Your Profile',
+      'phone_format': 'Phone Number (+91XXXXXXXXXX)',
+      'invalid_phone': 'Invalid phone number format',
+      'user_not_logged': 'User not logged in',
+      'error_saving': 'Error saving data',
+      'volunteer_question': 'Willing to help as a volunteer?',
+      'continue': 'Continue',
+
+      // 🔹 Basic Needs
       'available_needs': 'Available Basic Needs',
       'location': 'Location',
       'use_location': 'Use My Current Location',
       'getting': 'Getting...',
       'provider': 'Provided by',
-      'submit': 'Submit Location',
-      'request_needs': 'Request Additional Needs',
+      'submit': 'Submit',
+      'request_needs': 'Request Needs',
       'what_need': 'What do you need?',
-      'request': 'Request Need',
+      'request': 'Request',
       'shared_locations': 'Shared Locations',
 
-      'fill_required': 'Location, provider and user required',
-      'submit_success': 'Submitted successfully',
-      'submit_fail': 'Failed to submit',
-      'need_required': 'Please specify your need',
-      'request_shared': 'Request shared',
-      'request_fail': 'Failed to submit request',
-      'deleted': 'Entry deleted',
-      'delete_fail': 'Delete failed',
-      'location_disabled': 'Location services disabled',
-      'permission_denied': 'Permission denied',
-      'location_fail': 'Failed to get location',
-
-      // 🔹 Alerts Page
+      // 🔹 Alerts
       'alert_msg': 'Disaster Message',
       'alert_level': 'Disaster Level',
-      'safe_places': 'Safe Places (optional)',
+      'safe_places': 'Safe Places',
       'send_alert': 'Send Alert',
       'alert_sent': 'Alert sent successfully',
       'alert_deleted': 'Alert deleted',
-      'delete_failed': 'Failed to delete alert',
-      'no_alerts': 'No alerts in the past 24 hours',
+      'delete_failed': 'Delete failed',
+      'no_alerts': 'No alerts',
       'time_unknown': 'Time unknown',
       'no_message': 'No message',
       'level': 'Level',
       'sent_at': 'Sent at',
-      'offline': 'Offline',
 
-      // 🔹 Offline Alert Page
-      'offline_title': 'Offline Alert (SMS)',
+      // 🔹 Offline Alert
+      'offline_title': 'Offline Alert',
       'alert_message': 'Alert Message',
-      'type_alert': 'Type disaster alert here...',
-      'send_sms': 'Send SMS to All',
-      'total_numbers': 'Total Registered Numbers',
-      'no_numbers': 'No phone numbers found',
-      'msg_empty': 'Message cannot be empty',
-      'open_sms_fail': 'Could not open SMS app',
-      'load_error': 'Error loading numbers',
+      'type_alert': 'Type alert...',
+      'send_sms': 'Send SMS',
+      'total_numbers': 'Total Numbers',
+      'no_numbers': 'No numbers found',
+      'msg_empty': 'Message empty',
+      'open_sms_fail': 'SMS failed',
+      'load_error': 'Load error',
 
-      // 🔹 Safety Status Page
+      // 🔹 Safety Page
       'are_you_safe': 'Are you safe?',
       'safe_btn': "I'm Safe",
       'not_safe_btn': "I'm Not Safe",
-      'find_volunteers': 'Find Nearby Volunteers',
-      'current_status': 'Your current status',
-      'delete_status': 'Delete Status',
+      'find_volunteers': 'Find Volunteers',
+      'current_status': 'Your status',
+      'delete_status': 'Delete',
       'status_updated': 'Status updated',
-      'status_deleted': 'Your status was deleted',
-      'community_updates': 'Community Safety Updates',
-      'no_updates': 'No safety updates yet',
+      'status_deleted': 'Deleted',
+      'community_updates': 'Community Updates',
+      'no_updates': 'No updates',
       'status_label': 'Status',
 
-      // 🔹 User List Page
-      'all_users': 'All Registered Users',
+      // 🔹 User List
+      'all_users': 'All Users',
       'error_users': 'Error loading users',
-      'no_users': 'No users found',
+      'no_users': 'No users',
       'place': 'Place',
       'phone': 'Phone',
-      'address': 'Address',
       'gender': 'Gender',
       'age': 'Age',
 
       // 🔹 Common
-      'fill_fields': 'Please fill all fields',
-      'invalid_login': 'Invalid username or password',
-      'enter_email': 'Please enter your email',
-      'reset_title': 'Reset Password?',
-      'reset_msg': 'We will send a reset link to',
+      'fill_fields': 'Fill all fields',
+      'invalid_login': 'Invalid login',
+      'enter_email': 'Enter email',
       'cancel': 'Cancel',
       'send': 'Send',
       'ok': 'OK',
-      'reset_sent': 'Password reset link sent successfully',
     },
 
     // ================= TAMIL =================
     'ta': {
 
-      // 🔹 Home Page
+      // 🔹 Home
       'app_title': 'அவசர பயன்பாடு',
       'welcome': '👋 வரவேற்கிறோம்!',
-      'subtitle': 'சேவைகளை அணுகி பாதுகாப்பாக இருங்கள்.',
+      'subtitle': 'பாதுகாப்பாக இருங்கள்',
       'user_list': 'பயனர் பட்டியல்',
-      'alerts': 'பேரிடர் எச்சரிக்கைகள்',
+      'alerts': 'எச்சரிக்கைகள்',
       'needs': 'அடிப்படை தேவைகள்',
       'safety': 'பாதுகாப்பு நிலை',
       'volunteers': 'தன்னார்வலர்கள்',
       'contacts': 'அவசர தொடர்புகள்',
-      'first_aid': 'முதலுதவி குறிப்புகள்',
+      'first_aid': 'முதலுதவி',
 
-      // 🔹 Login Page
+      // 🔹 Login
       'login_title': 'உள்நுழையவும்',
       'username': 'பயனர் பெயர்',
       'email': 'மின்னஞ்சல்',
       'password': 'கடவுச்சொல்',
-      'forgot_password': 'கடவுச்சொல்லை மறந்துவிட்டீர்களா?',
+      'forgot_password': 'கடவுச்சொல் மறந்துவிட்டீர்களா?',
       'login': 'உள்நுழை',
-      'new_user': 'புதிய பயனர்? கணக்கு உருவாக்கவும்',
+      'new_user': 'புதிய பயனர்?',
 
-      // 🔹 Signup Page
+      // 🔹 Signup
       'signup_title': 'கணக்கு உருவாக்கவும்',
       'signup': 'பதிவு செய்',
-      'already_account': 'ஏற்கனவே கணக்கு உள்ளதா? உள்நுழையவும்',
-      'signup_failed': 'பதிவு தோல்வி:',
+      'already_account': 'ஏற்கனவே உள்ளதா?',
+      'signup_failed': 'பதிவு தோல்வி',
 
-      // 🔹 Volunteers Page
-      'search_hint': 'பெயர் அல்லது முகவரியால் தேடவும்',
-      'error_loading': 'தன்னார்வலர்களை ஏற்ற முடியவில்லை',
+      // 🔹 Volunteer Page
+      'search_hint': 'தேடவும்',
+      'error_loading': 'ஏற்ற முடியவில்லை',
       'no_volunteers': 'தன்னார்வலர்கள் இல்லை',
-      'no_match': 'பொருந்தும் தன்னார்வலர்கள் இல்லை',
+      'no_match': 'பொருந்தவில்லை',
       'skill': 'திறன்',
-      'willing': 'உதவ விருப்பம்',
+      'willing': 'உதவ தயாரா',
       'yes': 'ஆம்',
       'no': 'இல்லை',
 
-      // 🔹 Basic Needs Page
+      // 🔹 Volunteer Details
+      'volunteer_details': 'தன்னார்வலர் விவரங்கள்',
+      'mobile_number': 'மொபைல் எண்',
+      'address': 'முகவரி',
+      'skill_type': 'திறன் வகை',
+      'willing_help': 'உதவ விருப்பமா?',
+      'already_submitted': 'ஏற்கனவே சமர்ப்பித்துள்ளீர்கள்',
+      'volunteer_submitted': 'வெற்றிகரமாக பதிவு செய்யப்பட்டது',
+
+      // 🔹 User Details
+      'user_details': 'பயனர் விவரங்கள்',
+      'complete_profile': 'சுயவிவரம் பூர்த்தி செய்யவும்',
+      'phone_format': 'தொலைபேசி எண் (+91XXXXXXXXXX)',
+      'invalid_phone': 'தவறான எண்',
+      'user_not_logged': 'உள்நுழையவில்லை',
+      'error_saving': 'சேமிக்க முடியவில்லை',
+      'volunteer_question': 'தன்னார்வலராக உதவ விரும்புகிறீர்களா?',
+      'continue': 'தொடரவும்',
+
+      // 🔹 Basic Needs
       'available_needs': 'கிடைக்கும் தேவைகள்',
       'location': 'இடம்',
-      'use_location': 'தற்போதைய இடத்தை பயன்படுத்தவும்',
-      'getting': 'பெறப்படுகிறது...',
+      'use_location': 'இடம் பயன்படுத்தவும்',
+      'getting': 'பெறுகிறது...',
       'provider': 'வழங்குபவர்',
       'submit': 'சமர்ப்பிக்கவும்',
-      'request_needs': 'கூடுதல் தேவைகள் கோரிக்கை',
-      'what_need': 'உங்களுக்கு என்ன தேவை?',
-      'request': 'கோரிக்கை அனுப்பு',
-      'shared_locations': 'பகிரப்பட்ட இடங்கள்',
+      'request_needs': 'தேவை கோரிக்கை',
+      'what_need': 'என்ன தேவை?',
+      'request': 'கோரிக்கை',
+      'shared_locations': 'பகிர்வு',
 
-      'fill_required': 'இடம் மற்றும் வழங்குபவர் அவசியம்',
-      'submit_success': 'வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது',
-      'submit_fail': 'சமர்ப்பிக்க முடியவில்லை',
-      'need_required': 'தேவையை குறிப்பிடவும்',
-      'request_shared': 'கோரிக்கை பகிரப்பட்டது',
-      'request_fail': 'கோரிக்கை தோல்வி',
-      'deleted': 'நீக்கப்பட்டது',
-      'delete_fail': 'நீக்க முடியவில்லை',
-      'location_disabled': 'இட சேவை முடக்கப்பட்டுள்ளது',
-      'permission_denied': 'அனுமதி மறுக்கப்பட்டது',
-      'location_fail': 'இடம் பெற முடியவில்லை',
-
-      // 🔹 Alerts Page
-      'alert_msg': 'பேரிடர் செய்தி',
-      'alert_level': 'பேரிடர் நிலை',
-      'safe_places': 'பாதுகாப்பான இடங்கள் (விருப்பம்)',
-      'send_alert': 'எச்சரிக்கை அனுப்பு',
-      'alert_sent': 'எச்சரிக்கை அனுப்பப்பட்டது',
-      'alert_deleted': 'எச்சரிக்கை நீக்கப்பட்டது',
+      // 🔹 Alerts
+      'alert_msg': 'எச்சரிக்கை செய்தி',
+      'alert_level': 'அபாய நிலை',
+      'safe_places': 'பாதுகாப்பான இடம்',
+      'send_alert': 'அனுப்பு',
+      'alert_sent': 'அனுப்பப்பட்டது',
+      'alert_deleted': 'நீக்கப்பட்டது',
       'delete_failed': 'நீக்க முடியவில்லை',
-      'no_alerts': 'கடைசி 24 மணி நேரத்தில் எச்சரிக்கை இல்லை',
-      'time_unknown': 'நேரம் தெரியவில்லை',
+      'no_alerts': 'எதுவும் இல்லை',
+      'time_unknown': 'நேரம் இல்லை',
       'no_message': 'செய்தி இல்லை',
       'level': 'நிலை',
       'sent_at': 'அனுப்பிய நேரம்',
-      'offline': 'ஆஃப்லைன்',
 
-      // 🔹 Offline Alert Page
-      'offline_title': 'ஆஃப்லைன் எச்சரிக்கை (SMS)',
-      'alert_message': 'எச்சரிக்கை செய்தி',
-      'type_alert': 'இங்கு செய்தியை எழுதவும்...',
-      'send_sms': 'அனைவருக்கும் SMS அனுப்பு',
-      'total_numbers': 'மொத்த தொலைபேசி எண்கள்',
-      'no_numbers': 'தொலைபேசி எண்கள் இல்லை',
-      'msg_empty': 'செய்தி காலியாக இருக்க முடியாது',
-      'open_sms_fail': 'SMS பயன்பாட்டை திறக்க முடியவில்லை',
-      'load_error': 'எண்களை ஏற்ற முடியவில்லை',
+      // 🔹 Offline
+      'offline_title': 'ஆஃப்லைன் எச்சரிக்கை',
+      'alert_message': 'செய்தி',
+      'type_alert': 'எழுதவும்',
+      'send_sms': 'SMS அனுப்பு',
+      'total_numbers': 'எண்கள்',
+      'no_numbers': 'எண்கள் இல்லை',
+      'msg_empty': 'செய்தி காலியாக உள்ளது',
+      'open_sms_fail': 'SMS தோல்வி',
+      'load_error': 'ஏற்ற முடியவில்லை',
 
-      // 🔹 Safety Status Page
-      'are_you_safe': 'நீங்கள் பாதுகாப்பாக இருக்கிறீர்களா?',
+      // 🔹 Safety
+      'are_you_safe': 'நீங்கள் பாதுகாப்பா?',
       'safe_btn': 'நான் பாதுகாப்பாக இருக்கிறேன்',
       'not_safe_btn': 'நான் பாதுகாப்பாக இல்லை',
-      'find_volunteers': 'அருகிலுள்ள தன்னார்வலர்களை கண்டுபிடிக்கவும்',
-      'current_status': 'உங்கள் தற்போதைய நிலை',
-      'delete_status': 'நிலையை நீக்கு',
-      'status_updated': 'நிலை புதுப்பிக்கப்பட்டது',
-      'status_deleted': 'உங்கள் நிலை நீக்கப்பட்டது',
-      'community_updates': 'சமூக பாதுகாப்பு தகவல்கள்',
-      'no_updates': 'பாதுகாப்பு தகவல்கள் இல்லை',
+      'find_volunteers': 'தன்னார்வலர்கள் தேடு',
+      'current_status': 'நிலை',
+      'delete_status': 'நீக்கு',
+      'status_updated': 'புதுப்பிக்கப்பட்டது',
+      'status_deleted': 'நீக்கப்பட்டது',
+      'community_updates': 'சமூக தகவல்',
+      'no_updates': 'தகவல் இல்லை',
       'status_label': 'நிலை',
 
-      // 🔹 User List Page
+      // 🔹 User List
       'all_users': 'அனைத்து பயனர்கள்',
-      'error_users': 'பயனர்களை ஏற்ற முடியவில்லை',
-      'no_users': 'பயனர்கள் இல்லை',
+      'error_users': 'பிழை',
+      'no_users': 'பயனர் இல்லை',
       'place': 'இடம்',
       'phone': 'தொலைபேசி',
-      'address': 'முகவரி',
       'gender': 'பாலினம்',
       'age': 'வயது',
 
       // 🔹 Common
-      'fill_fields': 'அனைத்து புலங்களையும் நிரப்பவும்',
-      'invalid_login': 'தவறான பயனர் பெயர் அல்லது கடவுச்சொல்',
-      'enter_email': 'மின்னஞ்சலை உள்ளிடவும்',
-      'reset_title': 'கடவுச்சொல் மாற்றவா?',
-      'reset_msg': 'மீட்டமைப்பு இணைப்பு அனுப்பப்படும்',
-      'cancel': 'ரத்து செய்',
+      'fill_fields': 'அனைத்தையும் நிரப்பவும்',
+      'invalid_login': 'தவறான உள்நுழைவு',
+      'enter_email': 'மின்னஞ்சல் உள்ளிடவும்',
+      'cancel': 'ரத்து',
       'send': 'அனுப்பு',
       'ok': 'சரி',
-      'reset_sent': 'கடவுச்சொல் மீட்டமைப்பு இணைப்பு அனுப்பப்பட்டது',
     }
   };
 
