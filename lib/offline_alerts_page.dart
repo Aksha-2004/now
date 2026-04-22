@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'translations.dart';
 
 class OfflineAlertPage extends StatefulWidget {
   const OfflineAlertPage({super.key});
@@ -18,7 +19,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
   @override
   void initState() {
     super.initState();
-    _loadPhoneNumbers();
+    _loadPhoneNumbers(); // ✅ NO context usage here
   }
 
   @override
@@ -27,7 +28,7 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     super.dispose();
   }
 
-  // 🔹 Load phone numbers from Firestore
+  // ✅ Load phone numbers safely
   Future<void> _loadPhoneNumbers() async {
     try {
       final snapshot =
@@ -47,31 +48,46 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       });
     } catch (e) {
       setState(() => isLoading = false);
+
+      // ✅ context used safely AFTER build
+      String lang = Localizations.localeOf(context).languageCode;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error loading numbers: $e")),
+        SnackBar(
+          content: Text(
+            "${AppTranslations.getText('load_error', lang)}: $e",
+          ),
+        ),
       );
     }
   }
 
-  // ✅ Open NORMAL SMS app (user clicks Send manually)
+  // ✅ Open SMS App
   Future<void> _openSMSApp() async {
+    String lang = Localizations.localeOf(context).languageCode;
+
     final message = _messageController.text.trim();
 
     if (message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Message cannot be empty")),
+        SnackBar(
+          content:
+              Text(AppTranslations.getText('msg_empty', lang)),
+        ),
       );
       return;
     }
 
     if (phoneNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ No phone numbers found")),
+        SnackBar(
+          content:
+              Text(AppTranslations.getText('no_numbers', lang)),
+        ),
       );
       return;
     }
 
-    // 🔹 IMPORTANT: use semicolon for multiple recipients
     final String recipients = phoneNumbers.join(';');
 
     final Uri smsUri = Uri(
@@ -82,23 +98,33 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
       },
     );
 
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(
-        smsUri,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(
+          smsUri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        throw Exception("Cannot launch SMS");
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Could not open SMS app")),
+        SnackBar(
+          content:
+              Text(AppTranslations.getText('open_sms_fail', lang)),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    String lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Offline Alert (SMS)"),
+        title:
+            Text(AppTranslations.getText('offline_title', lang)),
         backgroundColor: Colors.orange,
       ),
       body: isLoading
@@ -107,40 +133,59 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // 🔹 Message Input
                   TextField(
                     controller: _messageController,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: "Alert Message",
-                      border: OutlineInputBorder(),
-                      hintText: "Type disaster alert here...",
+                    decoration: InputDecoration(
+                      labelText:
+                          AppTranslations.getText('alert_message', lang),
+                      hintText:
+                          AppTranslations.getText('type_alert', lang),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
+
                   const SizedBox(height: 12),
+
+                  // 🔹 Send Button
                   ElevatedButton.icon(
                     onPressed: _openSMSApp,
                     icon: const Icon(Icons.sms),
-                    label: const Text("Send SMS to All"),
+                    label: Text(
+                        AppTranslations.getText('send_sms', lang)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                     ),
                   ),
+
                   const SizedBox(height: 16),
+
+                  // 🔹 Count
                   Text(
-                    "📋 Total Registered Numbers: ${phoneNumbers.length}",
+                    "${AppTranslations.getText('total_numbers', lang)}: ${phoneNumbers.length}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 6),
+
+                  // 🔹 List of Numbers
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: phoneNumbers.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: Text(phoneNumbers[index]),
-                        );
-                      },
-                    ),
+                    child: phoneNumbers.isEmpty
+                        ? Center(
+                            child: Text(
+                              AppTranslations.getText('no_numbers', lang),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: phoneNumbers.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                leading: const Icon(Icons.phone),
+                                title: Text(phoneNumbers[index]),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -148,4 +193,3 @@ class _OfflineAlertPageState extends State<OfflineAlertPage> {
     );
   }
 }
-

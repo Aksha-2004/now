@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import 'translations.dart';
+import 'main.dart';
+
 class BasicNeedsPage extends StatefulWidget {
   const BasicNeedsPage({super.key});
 
@@ -17,15 +20,23 @@ class _BasicNeedsPageState extends State<BasicNeedsPage> {
   final _extraNeedRequestController = TextEditingController();
 
   final _auth = FirebaseAuth.instance;
-
   bool _loadingLocation = false;
 
-  Future<void> _getCurrentLocation() async {
+  void _showMsg(String key, Color color, String lang) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppTranslations.getText(key, lang)),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  Future<void> _getCurrentLocation(String lang) async {
     setState(() => _loadingLocation = true);
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _showMsg("Location services are disabled.", Colors.orange);
+        _showMsg('location_disabled', Colors.orange, lang);
         return;
       }
 
@@ -34,37 +45,31 @@ class _BasicNeedsPageState extends State<BasicNeedsPage> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
-        _showMsg("Location permission permanently denied.", Colors.red);
+        _showMsg('permission_denied', Colors.red, lang);
         return;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      final position = await Geolocator.getCurrentPosition();
+      final placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
 
-      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
       final place = placemarks.first;
-      _locationController.text = "${place.name}, ${place.locality}, ${place.administrativeArea}";
+      _locationController.text =
+          "${place.name}, ${place.locality}, ${place.administrativeArea}";
     } catch (e) {
-      _showMsg("❌ Failed to get location", Colors.red);
+      _showMsg('location_fail', Colors.red, lang);
     } finally {
       setState(() => _loadingLocation = false);
     }
   }
 
-  void _showMsg(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
-  }
-
-  Future<void> _submitAvailableNeed() async {
+  Future<void> _submitAvailableNeed(String lang) async {
     final location = _locationController.text.trim();
     final provider = _providerController.text.trim();
     final uid = _auth.currentUser?.uid;
 
     if (location.isEmpty || provider.isEmpty || uid == null) {
-      _showMsg("⚠ Location, provider and user required.", Colors.orange);
+      _showMsg('fill_required', Colors.orange, lang);
       return;
     }
 
@@ -79,17 +84,17 @@ class _BasicNeedsPageState extends State<BasicNeedsPage> {
       _locationController.clear();
       _providerController.clear();
 
-      _showMsg("✅ Submitted successfully!", Colors.green);
+      _showMsg('submit_success', Colors.green, lang);
     } catch (e) {
-      _showMsg("❌ Failed to submit", Colors.red);
+      _showMsg('submit_fail', Colors.red, lang);
     }
   }
 
-  Future<void> _submitRequestedNeed() async {
+  Future<void> _submitRequestedNeed(String lang) async {
     final request = _extraNeedRequestController.text.trim();
 
     if (request.isEmpty) {
-      _showMsg("Please specify your need.", Colors.orange);
+      _showMsg('need_required', Colors.orange, lang);
       return;
     }
 
@@ -100,174 +105,163 @@ class _BasicNeedsPageState extends State<BasicNeedsPage> {
       });
 
       _extraNeedRequestController.clear();
-      _showMsg("📢 Request shared with providers.", Colors.green);
+      _showMsg('request_shared', Colors.green, lang);
     } catch (e) {
-      _showMsg("❌ Failed to submit request", Colors.red);
+      _showMsg('request_fail', Colors.red, lang);
     }
   }
 
-  Future<void> _deleteNeed(String docId) async {
+  Future<void> _deleteNeed(String docId, String lang) async {
     try {
-      await FirebaseFirestore.instance.collection('basic_needs').doc(docId).delete();
-      _showMsg("🗑️ Entry deleted", Colors.grey);
+      await FirebaseFirestore.instance
+          .collection('basic_needs')
+          .doc(docId)
+          .delete();
+      _showMsg('deleted', Colors.grey, lang);
     } catch (e) {
-      _showMsg("❌ Delete failed", Colors.red);
+      _showMsg('delete_fail', Colors.red, lang);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    String lang = Localizations.localeOf(context).languageCode;
     final currentUid = _auth.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Basic Needs"),
+        title: Text(AppTranslations.getText('needs', lang)),
         backgroundColor: Colors.red,
+
+        actions: [
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('en'));
+            },
+            child: const Text("EN", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('ta'));
+            },
+            child: const Text("TA", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
+
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Section 1: Share Need
+
+            // 🔹 Available Needs
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("🟢 Available Basic Needs", style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
+                    Text(AppTranslations.getText('available_needs', lang)),
+                    const SizedBox(height: 10),
+
                     TextField(
                       controller: _locationController,
-                      decoration: InputDecoration(labelText: "Location"),
+                      decoration: InputDecoration(
+                        labelText: AppTranslations.getText('location', lang),
+                      ),
                     ),
-                    SizedBox(height: 6),
+
                     ElevatedButton.icon(
-                      onPressed: _loadingLocation ? null : _getCurrentLocation,
-                      icon: Icon(Icons.my_location),
-                      label: Text(_loadingLocation ? "Getting..." : "Use My Current Location"),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                      onPressed: _loadingLocation
+                          ? null
+                          : () => _getCurrentLocation(lang),
+                      icon: const Icon(Icons.my_location),
+                      label: Text(
+                        _loadingLocation
+                            ? AppTranslations.getText('getting', lang)
+                            : AppTranslations.getText('use_location', lang),
+                      ),
                     ),
-                    SizedBox(height: 12),
+
                     TextField(
                       controller: _providerController,
-                      decoration: InputDecoration(labelText: "Provided by"),
+                      decoration: InputDecoration(
+                        labelText: AppTranslations.getText('provider', lang),
+                      ),
                     ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _submitAvailableNeed,
-                      icon: Icon(Icons.check),
-                      label: Text("Submit Location"),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+
+                    ElevatedButton(
+                      onPressed: () => _submitAvailableNeed(lang),
+                      child: Text(AppTranslations.getText('submit', lang)),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
 
-            // Section 2: Request Additional Needs
+            const SizedBox(height: 20),
+
+            // 🔹 Request Needs
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("🆘 Request Additional Needs", style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
+                    Text(AppTranslations.getText('request_needs', lang)),
                     TextField(
                       controller: _extraNeedRequestController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        labelText: "What do you need? (e.g. Milk, medicine)",
-                        border: OutlineInputBorder(),
+                        labelText:
+                            AppTranslations.getText('what_need', lang),
                       ),
                     ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _submitRequestedNeed,
-                      icon: Icon(Icons.send),
-                      label: Text("Request Need"),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                    ElevatedButton(
+                      onPressed: () => _submitRequestedNeed(lang),
+                      child: Text(AppTranslations.getText('request', lang)),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
 
-            // Shared Locations List with delete button
-            Text("📍 Shared Locations", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(height: 8),
+            const SizedBox(height: 20),
+
+            // 🔹 Shared Locations
+            Text(AppTranslations.getText('shared_locations', lang)),
+
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('basic_needs')
                   .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator();
+                }
+
                 final docs = snapshot.data!.docs;
 
                 return ListView.builder(
-                  itemCount: docs.length,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: docs.length,
                   itemBuilder: (context, index) {
                     final doc = docs[index];
                     final data = doc.data() as Map<String, dynamic>;
                     final isUser = currentUid == data['uid'];
 
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 6),
-                      color: Colors.lightBlue[50],
-                      child: ListTile(
-                        leading: Icon(Icons.location_on, color: Colors.red),
-                        title: Text(data['location'] ?? ''),
-                        subtitle: Text("Provided by: ${data['provider'] ?? ''}"),
-                        trailing: isUser
-                            ? IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteNeed(doc.id),
-                              )
-                            : null,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-
-            SizedBox(height: 20),
-
-            // Requested Needs
-            Text("📢 Requested Needs", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(height: 8),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('requested_needs')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-                final docs = snapshot.data!.docs;
-
-                return ListView.builder(
-                  itemCount: docs.length,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final data = docs[index].data() as Map<String, dynamic>;
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 6),
-                      color: Colors.orange[50],
-                      child: ListTile(
-                        leading: Icon(Icons.warning, color: Colors.orange),
-                        title: Text(data['need'] ?? 'No need specified'),
-                      ),
+                    return ListTile(
+                      title: Text(data['location'] ?? ''),
+                      subtitle: Text(
+                          "${AppTranslations.getText('provider', lang)}: ${data['provider']}"),
+                      trailing: isUser
+                          ? IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () =>
+                                  _deleteNeed(doc.id, lang),
+                            )
+                          : null,
                     );
                   },
                 );

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'translations.dart';   // ✅ ADD
+import 'main.dart';           // ✅ ADD
+
 class VolunteersPage extends StatefulWidget {
   const VolunteersPage({super.key});
 
@@ -13,21 +16,43 @@ class _VolunteersPageState extends State<VolunteersPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    String lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Volunteers"),
+        title: Text(AppTranslations.getText('volunteers', lang)),
         backgroundColor: Colors.red,
+
+        // 🌐 Language Switch
+        actions: [
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('en'));
+            },
+            child: const Text("EN", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('ta'));
+            },
+            child: const Text("TA", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
+
       body: Column(
         children: [
-          // 🔍 Search bar
+          // 🔍 Search Bar
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
               decoration: InputDecoration(
-                hintText: "Search by name or address",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintText: AppTranslations.getText('search_hint', lang),
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -37,19 +62,32 @@ class _VolunteersPageState extends State<VolunteersPage> {
             ),
           ),
 
-          // 🔁 Real-time Firestore Stream
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('volunteers')
                   .orderBy('timestamp', descending: true)
-                  .snapshots(),
+                  .snapshots(includeMetadataChanges: true),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(AppTranslations.getText('error_loading', lang)),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Text(AppTranslations.getText('no_volunteers', lang)),
+                  );
+                }
 
                 final docs = snapshot.data!.docs;
 
-                // 🔍 Filter by name or address
                 final filteredDocs = docs.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final name = data['username']?.toLowerCase() ?? '';
@@ -58,7 +96,9 @@ class _VolunteersPageState extends State<VolunteersPage> {
                 }).toList();
 
                 if (filteredDocs.isEmpty) {
-                  return Center(child: Text("No volunteers found."));
+                  return Center(
+                    child: Text(AppTranslations.getText('no_match', lang)),
+                  );
                 }
 
                 return ListView.builder(
@@ -67,10 +107,10 @@ class _VolunteersPageState extends State<VolunteersPage> {
                     final data = filteredDocs[index].data() as Map<String, dynamic>;
 
                     return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       elevation: 3,
                       child: ListTile(
-                        leading: CircleAvatar(
+                        leading: const CircleAvatar(
                           backgroundColor: Colors.redAccent,
                           child: Icon(Icons.person, color: Colors.white),
                         ),
@@ -80,8 +120,8 @@ class _VolunteersPageState extends State<VolunteersPage> {
                           children: [
                             Text("📞 ${data['phone'] ?? 'N/A'}"),
                             Text("📍 ${data['address'] ?? 'Unknown'}"),
-                            Text("🛠️ Skill: ${data['skill'] ?? 'Not specified'}"),
-                            Text("🤝 Willing: ${data['willing'] == true ? 'Yes' : 'No'}"),
+                            Text("🛠️ ${AppTranslations.getText('skill', lang)}: ${data['skill'] ?? 'Not specified'}"),
+                            Text("🤝 ${AppTranslations.getText('willing', lang)}: ${data['willing'] == true ? AppTranslations.getText('yes', lang) : AppTranslations.getText('no', lang)}"),
                           ],
                         ),
                         isThreeLine: true,
@@ -97,4 +137,3 @@ class _VolunteersPageState extends State<VolunteersPage> {
     );
   }
 }
-

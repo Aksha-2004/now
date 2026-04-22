@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'translations.dart';   // ✅ ADD
+import 'main.dart';           // ✅ ADD
+
 class SignUpPage extends StatefulWidget {
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -18,29 +21,32 @@ class _SignUpPageState extends State<SignUpPage> {
   final _firestore = FirebaseFirestore.instance;
 
   void _signup() async {
+    String lang = Localizations.localeOf(context).languageCode;
+
     final username = usernameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      _showDialog("Please fill all fields.");
+      _showDialog(AppTranslations.getText('fill_fields', lang));
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      // Firebase Auth Signup
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // ✅ Update display name in Auth profile
       await userCredential.user!.updateDisplayName(username);
 
-      // ✅ Save user data to Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
         'uid': userCredential.user!.uid,
         'username': username,
         'email': email,
@@ -48,20 +54,22 @@ class _SignUpPageState extends State<SignUpPage> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Navigate to User Details page
       Navigator.pushReplacementNamed(context, '/user_details', arguments: {
         'uid': userCredential.user!.uid,
         'username': username,
         'email': email,
       });
     } catch (e) {
-      _showDialog("Signup failed: ${e.toString().split('] ').last}");
+      _showDialog(
+          "${AppTranslations.getText('signup_failed', lang)} ${e.toString().split('] ').last}");
     } finally {
       setState(() => isLoading = false);
     }
   }
 
   void _showDialog(String message) {
+    String lang = Localizations.localeOf(context).languageCode;
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -69,7 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
+            child: Text(AppTranslations.getText('ok', lang)),
           )
         ],
       ),
@@ -78,63 +86,108 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    String lang = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
+
+      // ✅ LANGUAGE SWITCH
+      appBar: AppBar(
+        backgroundColor: Colors.red,
+        actions: [
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('en'));
+            },
+            child: const Text("EN", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {
+              EmergencyContactApp.setLocale(context, const Locale('ta'));
+            },
+            child: const Text("TA", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+
       body: Center(
         child: SingleChildScrollView(
           child: Card(
-            margin: EdgeInsets.all(24),
+            margin: const EdgeInsets.all(24),
             elevation: 10,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Icon(Icons.person_add_alt, size: 60, color: Colors.red),
-                  SizedBox(height: 10),
-                  Text("Create an Account",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 20),
+                  const Icon(Icons.person_add_alt,
+                      size: 60, color: Colors.red),
+                  const SizedBox(height: 10),
+
+                  // ✅ TITLE
+                  Text(
+                    AppTranslations.getText('signup_title', lang),
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // USERNAME
                   TextField(
                     controller: usernameController,
                     decoration: InputDecoration(
-                      labelText: "Username",
-                      border: OutlineInputBorder(),
+                      labelText:
+                          AppTranslations.getText('username', lang),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 12),
+
+                  const SizedBox(height: 12),
+
+                  // EMAIL
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
+                      labelText:
+                          AppTranslations.getText('email', lang),
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  SizedBox(height: 12),
+
+                  const SizedBox(height: 12),
+
+                  // PASSWORD
                   TextField(
                     controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText: "Password",
-                      border: OutlineInputBorder(),
+                      labelText:
+                          AppTranslations.getText('password', lang),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 20),
+
+                  const SizedBox(height: 20),
+
                   ElevatedButton(
                     onPressed: isLoading ? null : _signup,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                    ),
                     child: isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text("Sign Up"),
+                        ? const CircularProgressIndicator(
+                            color: Colors.white)
+                        : Text(
+                            AppTranslations.getText('signup', lang)),
                   ),
-                  SizedBox(height: 10),
+
+                  const SizedBox(height: 10),
+
                   TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-                    child: Text("Already have an account? Login"),
+                    onPressed: () =>
+                        Navigator.pushReplacementNamed(context, '/'),
+                    child: Text(AppTranslations.getText(
+                        'already_account', lang)),
                   ),
                 ],
               ),
@@ -145,4 +198,3 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
-
