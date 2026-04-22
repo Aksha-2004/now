@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Disaster Response App">
 
-  <!-- IMPORTANT for GitHub Pages -->
+  <!-- ✅ IMPORTANT for GitHub Pages -->
   <base href="/now/">
 
   <title>Disaster</title>
@@ -41,20 +41,32 @@
       cursor: pointer;
       z-index: 9999;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      display: block; /* ✅ Always visible */
+      display: block;
+    }
+
+    /* 🔴 Invisible reCAPTCHA container */
+    #recaptcha-container {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      z-index: 9999;
     }
   </style>
 </head>
 
 <body>
 
+<!-- 🔥 REQUIRED FOR FIREBASE OTP -->
+<div id="recaptcha-container"></div>
+
+<!-- ✅ Install Button -->
 <button id="installBtn">Install App</button>
 
 <script>
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  // Try to capture install event
+  // Capture install event
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -62,12 +74,10 @@
 
   installBtn.addEventListener('click', async () => {
     if (deferredPrompt) {
-      // Show install popup
       deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
+      await deferredPrompt.userChoice;
       deferredPrompt = null;
     } else {
-      // Fallback manual instructions
       alert(
         "To install this app:\n\n" +
         "1. Tap the three dots (⋮)\n" +
