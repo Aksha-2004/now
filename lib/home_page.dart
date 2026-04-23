@@ -19,6 +19,9 @@ class _HomePageState extends State<HomePage> {
     {'key': 'volunteers', 'icon': Icons.people_alt, 'color': Colors.indigo, 'route': '/volunteers'},
     {'key': 'contacts', 'icon': Icons.phone, 'color': Colors.blue, 'route': '/contacts'},
     {'key': 'first_aid', 'icon': Icons.healing, 'color': Colors.green, 'route': '/first_aid'},
+
+    // ✅ NEW CHAT FEATURE
+    {'key': 'chat', 'icon': Icons.chat, 'color': Colors.green, 'route': '/chat'},
   ];
 
   @override
@@ -34,10 +37,8 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         elevation: 4,
 
-        // ✅ translated title
         title: Text(AppTranslations.getText('app_title', lang)),
 
-        // ✅ FIXED HERE (IMPORTANT CHANGE)
         actions: [
           TextButton(
             onPressed: () {

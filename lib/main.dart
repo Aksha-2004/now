@@ -17,6 +17,7 @@ import 'volunteers_page.dart';
 import 'safety_status_page.dart';
 import 'emergency_contacts_page.dart';
 import 'first_aid_page.dart';
+import 'SimpleChatBox.dart';
 import 'offline_alerts_page.dart';
 
 /// Background FCM message handler
@@ -24,7 +25,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print('🔔 Background message received: ${message.messageId}');
 }
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -195,6 +195,7 @@ class _EmergencyContactAppState extends State<EmergencyContactApp> {
         '/safety': (context) => const SafetyStatusPage(),
         '/contacts': (context) => EmergencyContactsPage(),
         '/first_aid': (context) => FirstAidPage(),
+        '/chat': (context) => const SimpleChatBox(),
         '/offline_alerts': (context) => const OfflineAlertPage(),
       },
     );
